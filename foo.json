@@ -1,0 +1,26 @@
+[
+    {
+        "brand": "Volvo",
+        "model": "V16",
+        "name": "Vovvon",
+        "type": "com.example.kotlinserializationjson.Car",
+        "year": 2019
+    },
+    {
+        "brand": "Ford",
+        "model": "Mondeo",
+        "name": "Fårrden",
+        "type": "com.example.kotlinserializationjson.Car",
+        "year": 2007
+    },
+    {
+        "brand": "KTM",
+        "model": "EXC-F 350",
+        "name": "Enduron",
+        "type": "com.example.kotlinserializationjson.Motorcycle",
+        "year": 2018
+    }
+]
+
+
+{"brand": "Husqvarna","model": "TC125","name": "Huskyn","type": "com.example.kotlinserializationjson.Car","year": 2019}
