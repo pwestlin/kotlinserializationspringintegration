@@ -36,5 +36,7 @@ out/
 ### VS Code ###
 .vscode/
 
+# Added by pwestlin
 github_access_token
 sune
+logs/

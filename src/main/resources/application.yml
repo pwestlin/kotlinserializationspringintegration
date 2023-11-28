@@ -1,4 +1,7 @@
-management:
-  endpoints.web.exposure.include: '*'
-
-management.endpoint.beans.enabled: true
+logging:
+  level:
+    com.example.kotlinserializationjson: DEBUG
+    org.springframework.boot.web.embedded.netty.NettyWebServer: INFO
+    root: WARN
+  file.name: logs/application.log
+  pattern.level: "%5p [${info.app.name},%X{traceId:-},%X{spanId:-}]"
