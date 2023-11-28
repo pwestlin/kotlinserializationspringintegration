@@ -7,7 +7,10 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.http.HttpStatus
+import org.springframework.http.ProblemDetail
 import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Repository
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -21,35 +24,66 @@ fun main(args: Array<String>) {
     runApplication<KotlinSerializationJsonApplication>(*args)
 }
 
-@RestController
-@RequestMapping("/vehicles")
-class CarsController {
-
-    private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
+@Repository
+class VehiclesRepository {
 
     private val vehicles: ArrayList<Vehicle> = arrayListOf(
-        Car(id = 1, name = "Vovvon", brand = "Volvo", model = "V16", year = 2019),
-        Car(id = 2, name = "Fårrden", brand = "Ford", model = "Mondeo", year = 2007),
+        Car(id = 1, name = "Vovvon", brand = "Volvo", model = "V16", year = 2019, noSeats = 5),
+        Car(id = 2, name = "Fårrden", brand = "Ford", model = "Mondeo", year = 2007, noSeats = 5),
         Motorcycle(id = 3, name = "Enduron", brand = "KTM", model = "EXC-F 350", year = 2018),
     )
 
+    fun all(): List<Vehicle> = vehicles
+
+    fun add(vehicle: Vehicle): Result<Unit> {
+        return if (vehicles.none { it.id == vehicle.id }) {
+            vehicles.add(vehicle)
+            Result.success(Unit)
+        } else {
+            Result.failure(IllegalArgumentException("vehicle.id ${vehicle.id} already exist"))
+        }
+    }
+}
+
+@RestController
+@RequestMapping("/vehicles")
+class VehiclesController(
+    private val vehiclesRepository: VehiclesRepository
+) {
+
+    private val logger: Logger = LoggerFactory.getLogger(this.javaClass)
+
     @GetMapping("/all")
     fun all(): List<Vehicle> {
-        logger.info(Json.encodeToString(vehicles))
-        logger.info(Json.encodeToString(vehicles.first()))
 
-        return vehicles
+        return vehiclesRepository.all()
     }
 
     @PostMapping("")
-    suspend fun saveNew(@RequestBody vehicle: Vehicle): ResponseEntity<Unit> {
+    suspend fun saveNew(@RequestBody vehicle: Vehicle): ResponseEntity<Any?> {
         logger.info("body: $vehicle")
-        return if (vehicles.none { it.id == vehicle.id }) {
-            vehicles.add(vehicle)
-            ResponseEntity.ok().build()
-        } else {
-            ResponseEntity.badRequest().build()
-        }
+        return vehiclesRepository.add(vehicle).fold(
+            { ResponseEntity.ok().build() },
+            {
+                when (it) {
+                    is IllegalArgumentException -> ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(
+                            ProblemDetail.forStatusAndDetail(
+                                HttpStatus.CONFLICT,
+                                "vehicle.id ${vehicle.id} already exist"
+                            )
+                        )
+
+                    else -> ResponseEntity.internalServerError()
+                        .body(
+                            ProblemDetail.forStatusAndDetail(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                it.message ?: ""
+                            )
+                        )
+                }
+            }
+        )
     }
 }
 
@@ -65,7 +99,8 @@ data class Car(
     override val name: String,
     val brand: String,
     val model: String,
-    val year: Int
+    val year: Int,
+    val noSeats: Int
 ) : Vehicle
 
 @Serializable
