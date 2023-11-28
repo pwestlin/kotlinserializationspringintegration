@@ -111,15 +111,12 @@ class VehiclesControllerTest {
         val exception = RuntimeException("It went to shite")
         every { vehiclesRepository.add(car) } returns Result.failure(exception)
 
-        // You must specify <Vehicle> explicitly otherwiew class discriminator ("type":"com.example.kotlinserializationjson.Car") is not added to the JSON output.
-        // Se https://github.com/Kotlin/kotlinx.serialization/blob/master/docs/polymorphism.md
-        val json = Json.encodeToString<Vehicle>(car)
         val httpStatusResponse = HttpStatus.INTERNAL_SERVER_ERROR
         client.post()
             .uri("/vehicles")
             .accept(MediaType.APPLICATION_JSON)
             .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(json)
+            .bodyValue(car)
             .exchange()
             .expectStatus().isEqualTo(httpStatusResponse)
             .returnResult<ProblemDetail>().let { result ->
