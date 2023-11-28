@@ -41,4 +41,20 @@ class VehiclesRepositoryTest {
             .hasMessage("vehicle.id ${vehicle.id} already exist")
         assertThat(repository.all()).containsExactlyInAnyOrderElementsOf(vehiclesDatabase.vehicles)
     }
+
+    @Test
+    fun `all cars`() {
+        assertThat(repository.cars()).containsExactlyInAnyOrderElementsOf(vehiclesDatabase.vehicles.filterIsInstance<Car>())
+    }
+
+    @Test
+    fun `vehicle by id that exist`() {
+        val vehicle = vehiclesDatabase.vehicles.last()
+        assertThat(repository.byId(vehicle.id)).isEqualTo(vehicle)
+    }
+
+    @Test
+    fun `vehicle by id that does not exist`() {
+        assertThat(repository.byId(-42)).isNull()
+    }
 }

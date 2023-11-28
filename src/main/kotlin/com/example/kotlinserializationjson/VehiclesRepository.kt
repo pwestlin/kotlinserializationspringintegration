@@ -19,4 +19,12 @@ class VehiclesRepository(
             Result.failure(IllegalArgumentException("vehicle.id ${vehicle.id} already exist"))
         }
     }
+
+    fun cars(): List<Car> {
+        return vehicles.filterIsInstance<Car>()
+    }
+
+    fun byId(id: Int): Vehicle? {
+        return vehicles.firstOrNull { it.id == id }
+    }
 }

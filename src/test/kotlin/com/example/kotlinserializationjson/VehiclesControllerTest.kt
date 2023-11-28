@@ -34,18 +34,18 @@ class VehiclesControllerTest {
         clearAllMocks()
     }
 
+    private val vehicles: ArrayList<Vehicle> = arrayListOf(
+        Car(id = 1, name = "Vovvon", brand = "Volvo", model = "V16", year = 2019, noSeats = 5),
+        Car(id = 2, name = "Fårrden", brand = "Ford", model = "Mondeo", year = 2007, noSeats = 5),
+        Motorcycle(id = 3, name = "Enduron", brand = "KTM", model = "EXC-F 350", year = 2018),
+    )
+
     @Test
     fun `get all vehicles`() {
-        val vehicles: ArrayList<Vehicle> = arrayListOf(
-            Car(id = 1, name = "Vovvon", brand = "Volvo", model = "V16", year = 2019, noSeats = 5),
-            Car(id = 2, name = "Fårrden", brand = "Ford", model = "Mondeo", year = 2007, noSeats = 5),
-            Motorcycle(id = 3, name = "Enduron", brand = "KTM", model = "EXC-F 350", year = 2018),
-        )
-
         every { vehiclesRepository.all() } returns vehicles
 
         client.get()
-            .uri("/vehicles/all")
+            .uri("/vehicles")
             .accept(MediaType.APPLICATION_JSON)
             .exchange()
             .expectStatus().isOk
@@ -134,5 +134,51 @@ class VehiclesControllerTest {
             }
 
         verifySequence { vehiclesRepository.add(car) }
+    }
+
+
+    @Test
+    fun `get all cars`() {
+        val cars = vehicles.filterIsInstance<Car>()
+        every { vehiclesRepository.cars() } returns cars
+
+        client.get()
+            .uri("/vehicles/cars")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody().json(Json.encodeToString(cars))
+
+        verifySequence { vehiclesRepository.cars() }
+    }
+
+    @Test
+    fun `get vehicle by id that exist`() {
+        val vehicle = vehicles.last()
+        every { vehiclesRepository.byId(vehicle.id) } returns vehicle
+
+        client.get()
+            .uri("/vehicles/${vehicle.id}")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isOk
+            .expectBody().json(Json.encodeToString(vehicle))
+
+        verifySequence { vehiclesRepository.byId(vehicle.id) }
+    }
+
+    @Test
+    fun `get vehicle by id that does not exist`() {
+        val id = -42
+        every { vehiclesRepository.byId(id) } returns null
+
+        client.get()
+            .uri("/vehicles/$id")
+            .accept(MediaType.APPLICATION_JSON)
+            .exchange()
+            .expectStatus().isNotFound
+            .expectBody().isEmpty
+
+        verifySequence { vehiclesRepository.byId(id) }
     }
 }
